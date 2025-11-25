@@ -1,109 +1,64 @@
-# 🔐 Secure 8-bit ALU with Hardware Encryption on FPGA
-### **Arty S7-50 (XC7S50CSGA324-1) — Verilog | Vivado 2018.2**
+# 🔐 Secure 8-bit ALU with Hardware Encryption on FPGA  
+### Developed by **Akhilesh Marimuthu S.** & **Lakkshaya E.**
+
+#### 🎓 Department of Electronics & Communication Engineering  
+#### 🏫 Chennai Institute of Technology  
+#### ⚙️ Vivado 2018.2 | Verilog HDL | Digilent Arty S7-50 FPGA (XC7S50CSGA324-1)
 
 ---
 
 ## 📌 Project Overview
-This project implements a **Secure 8-bit Arithmetic Logic Unit (ALU)** on the **Digilent Arty S7-50 FPGA board**.  
-The ALU performs arithmetic and logical operations using switch inputs and **automatically encrypts the output** using an **S-Box based substitution cipher** implemented in hardware.
 
-This demonstrates:
-- FPGA-based computation
-- Hardware cryptography integration
-- Real-time output observation through LEDs
+This project implements a **Secure 8-bit Arithmetic Logic Unit (ALU)** with **built-in hardware encryption**, implemented and tested on the **Arty S7-50 FPGA development board**.
 
----
+The ALU performs multiple arithmetic and logical operations using switch inputs and **automatically encrypts the final output** using either:
+- **S-Box Substitution Cipher (block-based substitution)**
+- **XOR One-Time-Pad encryption**
 
-## 🧠 Features
-
-| Category | Details |
-|---------|---------|
-| **FPGA Board** | Digilent Arty S7-50 (Spartan-7) XC7S50 |
-| **Development Tool** | Xilinx Vivado 2018.2 |
-| **HDL Language** | Verilog |
-| **ALU Operations** | ADD, SUB, XOR, Left Shift, Right Shift, Increment, Decrement, Pass A, Pass B |
-| **Encryption Method** | S-Box substitution cipher |
-| **Operand A Input** | SW0–SW3 |
-| **Operand B Input** | Constant `5` |
-| **Operation Select** | BTN0–BTN1 |
-| **Output** | Encrypted 4-bit result displayed on LEDs LED2–LED5 |
+The goal is to ensure that the output is **always encrypted** before leaving the ALU, making it resistant to direct observation attacks or reverse-engineering.
 
 ---
 
-## 🎛 I/O Controls
+## ⚙️ Features & Supported Operations
 
-### **Switches — Input A**
-| SW | Binary | Value |
-|----|--------|-------|
-| SW0–SW3 | b3 b2 b1 b0 | 0–15 |
+| Opcode (Buttons) | Operation | Description |
+|------------------|-----------|-------------|
+| `00` | ADD (A + B) | Addition of inputs |
+| `01` | SUB (A - B) | Subtraction |
+| `10` | XOR Logic | Bitwise XOR |
+| `11` | S-Box substitution | Non-linear encrypted output |
+| `1000` | Pass A | Output = A |
+| `1001` | Pass B | Output = B |
+| `1010` | Left Shift | A << 1 |
+| `1011` | Right Shift | A >> 1 |
+| `1100` | Increment | A + 1 |
+| `1101` | Decrement | A - 1 |
 
-### **Buttons — Select ALU Operation**
-| BTN1 BTN0 | Operation |
-|-----------|-----------|
-| 00 | ADD |
-| 01 | SUB |
-| 10 | XOR |
-| 11 | S-BOX transform |
-
-### **LEDs — Output Display**
-| LED | Description |
-|-----|-------------|
-| LED2–LED5 | Encrypted result `[3:0]` |
-| LED1 & LED0 (board-default) | Not used for ALU result |
+🔐 **Encryption:** Every operation output is fed into an encryption module (OTP XOR & S-Box block cipher).
 
 ---
 
-## 🧮 Example Verification Table
+## 🧠 Inputs & Outputs
 
-| A (Switch Input) | Operation | Buttons | Result | Encrypted Using S-Box | LED Output |
-|------------------|-----------|---------|---------|------------------------|-------------|
-| 0100 (4) | ADD | 00 | 4+5=9 | SBOX(9)=E | 1110 |
-| 1010 (10) | SUB | 01 | 10-5=5 | SBOX(5)=0 | 0000 |
-| 0111 (7) | XOR | 10 | 7⊕5=2 | SBOX(2)=6 | 0110 |
-| 0011 (3) | S-BOX | 11 | SBOX(3)=B | B=1011 | 1011 |
-
-
+| FPGA Input | Description |
+|------------|-------------|
+| `SW0–SW3` | 4-bit input operand A |
+| Constant B | Fixed internally as **5** |
+| `BTN0–BTN1` | Select operation |
+| `LED0–LED3` | Displays encrypted 4-bit output |
 
 ---
 
-## 🧪 Testing Procedure on FPGA
+## 🧪 Testing on FPGA
 
-1. Connect the **Arty S7-50 board** and power ON.
-2. Load the **generated bitstream (.bit)** through Vivado Hardware Manager.
-3. Set input value using **SW0–SW3**.
-4. Select ALU operation using **BTN0–BTN1**.
-5. Observe encrypted output on **LED2–LED5**.
+### **How to test**
+| Step | Action |
+|------|--------|
+| 1 | Set operand A using switches SW0–SW3 |
+| 2 | Choose ALU operation using buttons |
+| 3 | Observe encrypted output on LEDs 0-3 |
+| 4 | Change switches & compare real vs encrypted values |
 
-Example testing:
-SW = 0100 (A = 4)
-BTN1 BTN0 = 00 (ADD)
-Result = SBOX(4+5 = 9) ⇒ E (1110) → LEDs: ON ON ON OFF
+📍 **Note:** LED output will not match actual arithmetic value because it is encrypted.
 
-
----
-
-## 🚀 Future Improvements
-- Pipeline enhancement for higher performance
-- UART serial I/O for PC terminal display
-- AES-style block encryption support
-- Low-power optimization
-
----
-
-## 👤 Author
-
-**Akhilesh Marimuthu**  
-B.E Electronics & Communication Engineering  
-Chennai Institute of Technology  
-
-📧 Email: akhileshmarimuthu31@gmail.com  
-🔗 GitHub: https://github.com/akhilesh-marimuthu31  
-
----
-
-### ⭐ If you found this project helpful, please star the repository!  
-
----
-
-## 📂 File Structure
-
+Example:
