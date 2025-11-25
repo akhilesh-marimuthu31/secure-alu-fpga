@@ -1,44 +1,42 @@
-module top_alu_arty_s7(
-    input  wire        clk,
-    input  wire [3:0]  sw,
-    input  wire [3:0]  btn,
-    output reg  [3:0]  led
+//============================================================
+// Top module for Arty S7-50
+// - A comes from switches SW3..SW0  (0..15)
+// - B is constant 5
+// - key = {4'b1010, SW3..SW0}  -> depends on user switches
+// - btn[3:0] directly select ALU opcode (4-bit)
+// - ALU result is ALWAYS encrypted:
+//      result_plain -> XOR with key -> S-box block cipher
+// - LEDs (LED2..LED5) show lower 4 bits of encrypted result
+//============================================================
+
+module top_alu_arty_s7 (
+    input  wire        clk,    // not used in logic, but constrained
+    input  wire [3:0]  sw,     // SW3..SW0 -> A and key low bits
+    input  wire [3:0]  btn,    // BTN3..BTN0 -> opcode
+    output reg  [3:0]  led     // mapped to LED2..LED5 on board
 );
 
-    reg  [7:0] A, B, key;
-    reg  [3:0] opcode;
-    wire [7:0] core_result;
-    reg  [7:0] encrypted;
+    // Operand and key setup
+    wire [7:0] A   = {4'b0000, sw};   // A = 0..15
+    wire [7:0] B   = 8'h05;           // B fixed = 5
+    wire [7:0] key = {4'b1010, sw};   // key high nibble fixed, low nibble from switches
 
-    always @(*) begin
-        A   = {4'b0000, sw};  // lower nibble from switches
-        B   = 8'h05;          // constant input B = 5
-        key = 8'hA5;          // encryption key
+    wire [3:0] opcode = btn;          // opcode = BTN3..BTN0 directly
 
-        case (btn[1:0])
-            2'b00: opcode = 4'b0000;  // ADD
-            2'b01: opcode = 4'b0001;  // SUB
-            2'b10: opcode = 4'b0100;  // MUL
-            2'b11: opcode = 4'b1010;  // SHIFT LEFT
-            default: opcode = 4'b0000;
-        endcase
-    end
+    wire [7:0] result_enc;            // final encrypted result
 
-    alu_8bit u_alu (
-        .A(A),
-        .B(B),
-        .opcode(opcode),
-        .result(core_result)
+    // ALU + crypto block (ALWAYS encrypted)
+    alu_8bit_crypto u_alu_crypto (
+        .A         (A),
+        .B         (B),
+        .opcode    (opcode),
+        .key       (key),
+        .result_enc(result_enc)
     );
 
-    // Encryption selection
+    // Drive LEDs with lower 4 bits of encrypted result
     always @(*) begin
-        if(btn[2] == 1'b0)        // XOR ENCRYPTION
-            encrypted = core_result ^ key;
-        else                     // S-BOX ENCRYPTION
-            encrypted = {4'h0, core_result[3:0] ^ 4'hC};  
+        led = result_enc[3:0];
     end
-
-    always @(*) led = encrypted[3:0];
 
 endmodule
